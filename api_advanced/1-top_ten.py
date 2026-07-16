@@ -1,55 +1,40 @@
 #!/usr/bin/python3
 """
-Module to query Reddit API for top 10 hot posts.
+Module that queries the Reddit API and prints the titles of the
+first 10 hot posts for a given subreddit.
 """
-
 import requests
 
 
 def top_ten(subreddit):
     """
-    Prints the titles of the first 10 hot posts for a given subreddit.
-    
+    Queries the Reddit API and prints the titles of the first 10 hot
+    posts listed for a given subreddit. If not a valid subreddit,
+    prints None.
+
     Args:
-        subreddit (str): The name of the subreddit (without the 'r/' prefix)
-    
-    Returns:
-        None
+        subreddit (str): the name of the subreddit to search.
     """
-    
-    if not subreddit or not isinstance(subreddit, str):
-        print("None")
+    url = "https://www.reddit.com/r/{}/hot.json".format(subreddit)
+    headers = {"User-Agent": "linux:alu-scripting:v1.0 (by /u/alu-student)"}
+    params = {"limit": 10}
+
+    response = requests.get(url, headers=headers, params=params,
+                             allow_redirects=False)
+
+    if response.status_code != 200:
+        print(None)
         return
-    
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-    }
-    
-    url = f"https://www.reddit.com/r/{subreddit}/hot.json"
-    
+
     try:
-        response = requests.get(
-            url,
-            headers=headers,
-            allow_redirects=False,
-            timeout=5
-        )
-        
-        if response.status_code != 200:
-            print("None")
-            return
-        
-        data = response.json()
-        posts = data.get('data', {}).get('children', [])
-        
-        if not posts:
-            print("None")
-            return
-        
-        for i, post in enumerate(posts[:10]):
-            title = post.get('data', {}).get('title')
-            if title:
-                print(title)
-    
-    except Exception:
-        print("None")
+        posts = response.json().get("data", {}).get("children", [])
+    except ValueError:
+        print(None)
+        return
+
+    if not posts:
+        print(None)
+        return
+
+    for post in posts:
+        print(post.get("data", {}).get("title"))
